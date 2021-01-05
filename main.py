@@ -15,7 +15,8 @@ parser.add_argument("--spatial_feat_dim", type = int, default = 512)
 parser.add_argument("--mem_size", type = int, default = 982)
 parser.add_argument("--alpha", type = float, default = 0.1)
 parser.add_argument("--top_k", type = int, default = 256)
-parser.add_argument("--color_info", type = str, default = 'dist', help = 'option should be dist or RGB')
+parser.add_argument("--color_info", type = str, default = 'dist', 
+                    help = 'option should be dist or RGB')
 
 ## Data specification 
 parser.add_argument("--train_data_path", type = str, default = './pokemon/')
