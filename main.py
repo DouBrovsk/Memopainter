@@ -19,9 +19,9 @@ parser.add_argument("--color_info", type = str, default = 'dist',
                     help = 'option should be dist or RGB')
 
 ## Data specification 
-parser.add_argument("--train_data_path", type = str, default = './pokemon/')
-parser.add_argument("--test_data_path", type = str, default = './pokemon/')
-parser.add_argument("--data_name", type = str, default = 'pokemon')
+parser.add_argument("--train_data_path", type = str, default = '../Data/flow_train/')
+parser.add_argument("--test_data_path", type = str, default = './Data/flow_test/')
+parser.add_argument("--data_name", type = str, default = 'flow')
 parser.add_argument("--km_file_path", type = str, default = './pts_in_hull.npy')
 parser.add_argument("--img_size", type = int, default = 256)
 parser.add_argument("--model_path", type = str, default = './model')
