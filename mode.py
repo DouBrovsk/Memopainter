@@ -15,6 +15,8 @@ from PIL import Image
 
 def train(args):
     
+    print("Training Start")
+    
     model_path = os.path.join(args.model_path, args.data_name)
     if not os.path.isdir(model_path):
         os.mkdir(model_path)
@@ -60,6 +62,7 @@ def train(args):
     
     ### Training prcoess
     for e in range(args.epoch):
+        print("New epoch start")
         for i, batch in enumerate(tr_dataloader):
             res_input = batch['res_input'].to(device)
             color_feat = batch['color_feat'].to(device)
