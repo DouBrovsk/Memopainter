@@ -71,16 +71,16 @@ def train(args):
             idx = batch['index'].to(device)
 
             ### 1) Train spatial feature extractor
-            res_feature = mem(res_input)
-            loss = mem.unsupervised_loss(res_feature, color_feat, args.color_thres)
-            zero_grad(opts)
-            loss.backward()
-            m_opt.step()
+            #res_feature = mem(res_input)
+            #loss = mem.unsupervised_loss(res_feature, color_feat, args.color_thres)
+            #zero_grad(opts)
+            #loss.backward()
+            #m_opt.step()
             
             ### 2) Update Memory module
-            with torch.no_grad():
-                res_feature = mem(res_input)
-                mem.memory_update(res_feature, color_feat, args.color_thres, idx)
+            #with torch.no_grad():
+                #res_feature = mem(res_input)
+                #mem.memory_update(res_feature, color_feat, args.color_thres, idx)
 
             ### 3) Train Discriminator    
             dis_color_feat = torch.cat([torch.unsqueeze(color_feat, 2) for _ in range(args.img_size)], dim = 2)
@@ -93,6 +93,8 @@ def train(args):
             d_loss_fake = criterion_GAN(fake, fake_labels)
             d_loss = d_loss_real + d_loss_fake
             
+            print("discrimator loss" + str(d_loss))
+            
             zero_grad(opts)
             d_loss.backward()
             d_opt.step()
@@ -104,11 +106,14 @@ def train(args):
 
             g_loss_smoothL1 = criterion_sL1(fake_ab_channel, ab_channel)
             g_loss = g_loss_GAN + g_loss_smoothL1
+            
+            print("generator loss" + str(d_loss))
 
             zero_grad(opts)
             g_loss.backward()
             g_opt.step()
-            
+         
+        print("epoch losses, discriminator & generator : " + str(d_loss) + '   ' + str(g_loss))    
         f = open(train_log_path, 'a')
         f.write('%04d-epoch train loss'%(e))
         f.write('g_loss : %04f \t d_loss : %04f \n'%(g_loss.item(), d_loss.item()))
@@ -177,10 +182,12 @@ def test_operation(args, generator, mem, te_dataloader, device, e = -1):
             
             bs = res_input.size()[0]
 
-            query = mem(res_input)
-            top1_feature, _ = mem.topk_feature(query, 1)
-            top1_feature = top1_feature[:, 0, :]
-            result_ab_channel = generator(l_channel, top1_feature)
+            #query = mem(res_input)
+            #top1_feature, _ = mem.topk_feature(query, 1)
+            #top1_feature = top1_feature[:, 0, :]
+            #result_ab_channel = generator(l_channel, top1_feature)
+            
+            result_ab_channel = generator(l_channel, color_feat)
             
             real_image = torch.cat([l_channel * 100, ab_channel * 110], dim = 1).cpu().numpy()
             fake_image = torch.cat([l_channel * 100, result_ab_channel * 110], dim = 1).cpu().numpy()
