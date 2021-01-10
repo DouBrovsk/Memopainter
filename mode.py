@@ -11,6 +11,7 @@ from util import zero_grad
 from skimage.color import lab2rgb
 import numpy as np
 from PIL import Image
+from util import perceptionLoss
 
 
 def train(args):
@@ -93,7 +94,7 @@ def train(args):
             d_loss_fake = criterion_GAN(fake, fake_labels)
             d_loss = d_loss_real + d_loss_fake
             
-            print("discrimator loss" + str(d_loss))
+            print("discrimator loss" + str(d_loss.item()))
             
             zero_grad(opts)
             d_loss.backward()
@@ -107,7 +108,7 @@ def train(args):
             g_loss_smoothL1 = criterion_sL1(fake_ab_channel, ab_channel)
             g_loss = g_loss_GAN + g_loss_smoothL1
             
-            print("generator loss" + str(d_loss))
+            print("generator loss" + str(g_loss.item()))
 
             zero_grad(opts)
             g_loss.backward()
