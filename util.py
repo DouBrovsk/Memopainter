@@ -8,7 +8,7 @@ import torchvision
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def perceptionLoss(pretrained_model="vgg16", device=device):
+def perceptionLoss(x,y,pretrained_model="vgg16", device=device):
     """
     Possible parameters: "vgg16", "resnet18", "vgg19"
     """
@@ -23,9 +23,9 @@ def perceptionLoss(pretrained_model="vgg16", device=device):
     else:
         raise Exception("Error: Unknown model for perception loss function.")
 
-    def loss(x, y): # Differentiable and the weights of the loss network won't be updated because they were not passed as an argument to the optimizer
-        return torch.mean((m(x)-m(y))**2)
-    return loss
+    
+    return torch.mean((m(x)-m(y))**2)
+    
 
 ##### For making color feature using 313bins
 def unflatten_2d_array(pts_flt,pts_nd,axis=1,squeeze=False):
