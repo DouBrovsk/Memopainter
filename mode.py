@@ -231,16 +231,17 @@ def test_operation(args, generator, mem, te_dataloader, device, e = -1):
 
 def test_Perceptual_Loss(args, generator, te_dataloader, device):
     
+    p_loss = 0
+    
     
     with torch.no_grad():
         for i, batch in enumerate(te_dataloader):
             
-            res_input = batch['res_input'].to(device)
+            
             color_feat = batch['color_feat'].to(device)
             l_channel = (batch['l_channel'] / 100.0).to(device)
             ab_channel = (batch['ab_channel'] / 110.0).to(device)
             
-            bs = res_input.size()[0]
 
             
             result_ab_channel = generator(l_channel, color_feat)
@@ -249,9 +250,12 @@ def test_Perceptual_Loss(args, generator, te_dataloader, device):
             real_image = torch.cat([l_channel * 100, ab_channel * 110], dim = 1)
             fake_image = torch.cat([l_channel * 100, result_ab_channel * 110], dim = 1)
             
-            p_loss = perceptionLoss(real_image,fake_image,pretrained_model="vgg16", device=device)
+            p_loss += perceptionLoss(real_image,fake_image,pretrained_model="vgg16", device=device)
             
-            print('perceptual_loss =' + str(p_loss) )
+            
+    print('test_perceptual_loss over the epoch =' + str(p_loss.item()/len(te_dataloader)) )
+            
+            
             
             
             
