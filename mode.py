@@ -94,7 +94,7 @@ def train(args):
             d_loss_fake = criterion_GAN(fake, fake_labels)
             d_loss = d_loss_real + d_loss_fake
             
-            print("discrimator loss" + str(d_loss.item()))
+            
             
             zero_grad(opts)
             d_loss.backward()
@@ -108,30 +108,32 @@ def train(args):
             g_loss_smoothL1 = criterion_sL1(fake_ab_channel, ab_channel)
             g_loss = g_loss_GAN + g_loss_smoothL1
             
-            print("generator loss" + str(g_loss.item()))
+            
 
             zero_grad(opts)
             g_loss.backward()
             g_opt.step()
          
-        print("epoch losses, discriminator & generator : " + str(d_loss) + '   ' + str(g_loss))    
+        print("epoch losses, discriminator & generator : " + str(d_loss.item()) + '   ' + str(g_loss.item()))    
         f = open(train_log_path, 'a')
         f.write('%04d-epoch train loss'%(e))
         f.write('g_loss : %04f \t d_loss : %04f \n'%(g_loss.item(), d_loss.item()))
         f.close()
         
-        if args.test_with_train and (e + 1) % args.test_freq  == 0:
-            generator.eval()
-            test_operation(args, generator, mem, te_dataloader, device, e)
-            generator.train()
+        #if args.test_with_train and (e + 1) % args.test_freq  == 0:
+            #generator.eval()
+            #test_operation(args, generator, mem, te_dataloader, device, e)
+            #generator.train()
+            
+            
+        test_Perceptual_Loss(args, generator, te_dataloader, device)
         
-        if (e + 1) % args.model_save_freq == 0:
-            torch.save(generator.state_dict(), os.path.join(model_path ,'generator_%03d.pt'%e))
-            torch.save({'mem_model' : mem.state_dict(),
-                       'mem_key' : mem.spatial_key.cpu(),
-                       'mem_value' : mem.color_value.cpu(),
-                       'mem_age' : mem.age.cpu(),
-                       'mem_index' : mem.top_index.cpu()}, os.path.join(model_path, 'memory_%03d.pt'%e))
+        torch.save(generator.state_dict(), os.path.join(model_path ,'generator_%03d.pt'%e))
+            #torch.save({'mem_model' : mem.state_dict(),
+                       #'mem_key' : mem.spatial_key.cpu(),
+                       #'mem_value' : mem.color_value.cpu(),
+                       #'mem_age' : mem.age.cpu(),
+                       #'mem_index' : mem.top_index.cpu()}, os.path.join(model_path, 'memory_%03d.pt'%e))
 
 
 def test(args):
@@ -226,4 +228,33 @@ def test_operation(args, generator, mem, te_dataloader, device, e = -1):
                         gray_img.save(os.path.join(result_path, name%(count, 'gray')))
 
                 count = count + 1
+
+def test_Perceptual_Loss(args, generator, te_dataloader, device):
+    
+    
+    with torch.no_grad():
+        for i, batch in enumerate(te_dataloader):
+            
+            res_input = batch['res_input'].to(device)
+            color_feat = batch['color_feat'].to(device)
+            l_channel = (batch['l_channel'] / 100.0).to(device)
+            ab_channel = (batch['ab_channel'] / 110.0).to(device)
+            
+            bs = res_input.size()[0]
+
+            
+            result_ab_channel = generator(l_channel, color_feat)
+            
+            
+            real_image = torch.cat([l_channel * 100, ab_channel * 110], dim = 1).cpu()
+            fake_image = torch.cat([l_channel * 100, result_ab_channel * 110], dim = 1).cpu()
+            
+            p_loss = perceptionLoss.loss(real_image,fake_image)
+            
+            print('perceptual_loss =' + str(p_loss) )
+            
+            
+            
+            
+            
 
