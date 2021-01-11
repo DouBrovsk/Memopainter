@@ -246,8 +246,8 @@ def test_Perceptual_Loss(args, generator, te_dataloader, device):
             result_ab_channel = generator(l_channel, color_feat)
             
             
-            real_image = torch.cat([l_channel * 100, ab_channel * 110], dim = 1).cpu()
-            fake_image = torch.cat([l_channel * 100, result_ab_channel * 110], dim = 1).cpu()
+            real_image = torch.cat([l_channel * 100, ab_channel * 110], dim = 1)
+            fake_image = torch.cat([l_channel * 100, result_ab_channel * 110], dim = 1)
             
             p_loss = perceptionLoss(real_image,fake_image,pretrained_model="vgg16", device=device)
             
