@@ -18,6 +18,8 @@ def train(args):
     
     print("Training Start")
     
+    torch.cuda.empty_cache() 
+    
     model_path = os.path.join(args.model_path, args.data_name)
     if not os.path.isdir(model_path):
         os.mkdir(model_path)
