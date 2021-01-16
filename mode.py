@@ -18,7 +18,7 @@ def train(args):
     
     print("Training Start")
     
-    torch.cuda.empty_cache() 
+     
     
     model_path = os.path.join(args.model_path, args.data_name)
     if not os.path.isdir(model_path):
@@ -32,6 +32,7 @@ def train(args):
     
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.cuda.empty_cache() 
     
     ### Dataset and Dataloader for training
     tr_dataset = mydata(img_path = args.train_data_path, img_size = args.img_size, km_file_path = args.km_file_path, color_info = args.color_info)
