@@ -40,8 +40,8 @@ def train(args):
         te_dataloader = DataLoader(te_dataset, batch_size = args.batch_size, shuffle=False, drop_last = False)
         
     if args.FT or args.FT_p:
-        ft_dataset = mydata(img_path = args.test_data_path, img_size = args.img_size,km_file_path = args.km_file_path, color_info = args.color_info)
-        ft_dataloader = DataLoader(te_dataset, batch_size = args.batch_size, shuffle=False, drop_last = False)
+        ft_dataset = mydata(img_path = args.ft_data_path, img_size = args.img_size,km_file_path = args.km_file_path, color_info = args.color_info)
+        ft_dataloader = DataLoader(ft_dataset, batch_size = args.batch_size, shuffle=False, drop_last = False)
     
     ### Networks for coloring
     mem = Memory_Network(mem_size = args.mem_size, color_info = args.color_info, color_feat_dim = args.color_feat_dim, spatial_feat_dim = args.spatial_feat_dim, top_k = args.top_k, alpha = args.alpha).to(device)
