@@ -38,6 +38,10 @@ def train(args):
     if args.test_with_train:
         te_dataset = mydata(img_path = args.test_data_path, img_size = args.img_size,km_file_path = args.km_file_path, color_info = args.color_info)
         te_dataloader = DataLoader(te_dataset, batch_size = args.batch_size, shuffle=False, drop_last = False)
+        
+    if args.FT or args.FT_p:
+        ft_dataset = mydata(img_path = args.test_data_path, img_size = args.img_size,km_file_path = args.km_file_path, color_info = args.color_info)
+        ft_dataloader = DataLoader(te_dataset, batch_size = args.batch_size, shuffle=False, drop_last = False)
     
     ### Networks for coloring
     mem = Memory_Network(mem_size = args.mem_size, color_info = args.color_info, color_feat_dim = args.color_feat_dim, spatial_feat_dim = args.spatial_feat_dim, top_k = args.top_k, alpha = args.alpha).to(device)
@@ -59,9 +63,10 @@ def train(args):
     g_opt = optim.Adam(generator.parameters(), lr = args.lr)
     d_opt = optim.Adam(discriminator.parameters(), lr = args.lr)
     m_opt = optim.Adam(mem.parameters(), lr = args.lr)
-    opts = [g_opt, d_opt, m_opt]
+    p_opt = optim.Adam(generator.parameters(),lr = args.lr)
+    opts = [g_opt, d_opt, m_opt,p_opt]
     
-    ### Training prcoess
+    ### Training process
     for e in range(args.epoch):
         print("New epoch start")
         for i, batch in enumerate(tr_dataloader):
@@ -125,15 +130,96 @@ def train(args):
             #test_operation(args, generator, mem, te_dataloader, device, e)
             #generator.train()
             
-            
-        test_Perceptual_Loss(args, generator, te_dataloader, device)
+        if args.test_with_train:
         
-        torch.save(generator.state_dict(), os.path.join(model_path ,'generator_%03d.pt'%e))
+            test_Perceptual_Loss(args, generator, te_dataloader, device)
+        
+        #torch.save(generator.state_dict(), os.path.join(model_path ,'generator_%03d.pt'%e))
             #torch.save({'mem_model' : mem.state_dict(),
                        #'mem_key' : mem.spatial_key.cpu(),
                        #'mem_value' : mem.color_value.cpu(),
                        #'mem_age' : mem.age.cpu(),
                        #'mem_index' : mem.top_index.cpu()}, os.path.join(model_path, 'memory_%03d.pt'%e))
+                       
+    
+    if args.FT:
+        for e in range(args.FT_epochs):
+        
+            for i, batch in enumerate(ft_dataloader):
+            
+                res_input = batch['res_input'].to(device)
+                color_feat = batch['color_feat'].to(device)
+                l_channel = (batch['l_channel'] / 100.0).to(device)
+                ab_channel = (batch['ab_channel'] / 110.0).to(device)
+                idx = batch['index'].to(device)
+                
+                
+                ### 3) Train Discriminator    
+                dis_color_feat = torch.cat([torch.unsqueeze(color_feat, 2) for _ in range(args.img_size)], dim = 2)
+                dis_color_feat = torch.cat([torch.unsqueeze(dis_color_feat, 3) for _ in range(args.img_size)], dim = 3)
+                fake_ab_channel = generator(l_channel, color_feat)
+                real = discriminator(ab_channel, l_channel, dis_color_feat)
+                d_loss_real = criterion_GAN(real, real_labels)
+                
+                fake = discriminator(fake_ab_channel, l_channel, dis_color_feat)
+                d_loss_fake = criterion_GAN(fake, fake_labels)
+                d_loss = d_loss_real + d_loss_fake
+                
+                
+                
+                zero_grad(opts)
+                d_loss.backward()
+                d_opt.step()
+                
+                ### 4) Train Generator
+                fake_ab_channel = generator(l_channel, color_feat)
+                fake = discriminator(fake_ab_channel, l_channel, dis_color_feat)
+                g_loss_GAN = criterion_GAN(fake, real_labels)
+                
+                g_loss_smoothL1 = criterion_sL1(fake_ab_channel, ab_channel)
+                g_loss = g_loss_GAN + g_loss_smoothL1
+                
+                
+                
+                zero_grad(opts)
+                g_loss.backward()
+                g_opt.step()
+                
+            print("FT epoch losses, discriminator & generator : " + str(d_loss.item()) + '   ' + str(g_loss.item()))
+            
+            test_Perceptual_Loss(args, generator, te_dataloader, device)
+            
+            
+            
+    if args.FT_p:
+        for e in range(args.FT_p_epochs):
+        
+            for i, batch in enumerate(ft_dataloader):
+            
+                color_feat = batch['color_feat'].to(device)
+                l_channel = (batch['l_channel'] / 100.0).to(device)
+                ab_channel = (batch['ab_channel'] / 110.0).to(device)
+            
+                result_ab_channel = generator(l_channel, color_feat)
+            
+            
+                real_image = torch.cat([l_channel * 100, ab_channel * 110], dim = 1)
+                fake_image = torch.cat([l_channel * 100, result_ab_channel * 110], dim = 1)
+            
+                p_loss = perceptionLoss(real_image,fake_image,pretrained_model="vgg16", device=device)
+                
+                zero_grad(opts)
+                p_loss.backward()
+                p_opt.step()
+                
+            test_Perceptual_Loss(args, generator, te_dataloader, device)
+                
+                
+            
+        
+            
+            
+        
 
 
 def test(args):

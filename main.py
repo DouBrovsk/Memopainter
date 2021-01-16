@@ -35,10 +35,16 @@ parser.add_argument("--mode", type = str, default = 'train')
 parser.add_argument("--lr", type = float, default = 1e-4)
 parser.add_argument("--epoch", type = int, default = 10)
 parser.add_argument("--color_thres", type = float, default = 0.7)
-parser.add_argument("--test_with_train", type = str2bool, default = True)
+parser.add_argument("--test_with_train", type = str2bool, default = False)
 parser.add_argument("--test_freq", type = int, default = 2)
 parser.add_argument("--model_save_freq", type = int, default = 1)
 parser.add_argument("--test_only", type = str2bool, default = False)
+parser.add_argument("--FT", type= str2bool, default = False)
+parser.add_argument("--FT_p", type= str2bool, default = False)
+
+parser.add_argument("--FT_epochs", type= int, default = 5)
+parser.add_argument("--FT_p_epochs", type= int, default = 5)
+
 
 args = parser.parse_args()
 
