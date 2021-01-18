@@ -65,9 +65,9 @@ def train(args):
     tr_dataset = mydata(img_path = args.train_data_path, img_size = args.img_size, km_file_path = args.km_file_path, color_info = args.color_info)
     tr_dataloader = DataLoader(tr_dataset, batch_size = args.batch_size, shuffle=True, drop_last = True)
     
-    if args.test_with_train:
-        te_dataset = mydata(img_path = args.test_data_path, img_size = args.img_size,km_file_path = args.km_file_path, color_info = args.color_info)
-        te_dataloader = DataLoader(te_dataset, batch_size = args.batch_size, shuffle=False, drop_last = False)
+    
+    te_dataset = mydata(img_path = args.test_data_path, img_size = args.img_size,km_file_path = args.km_file_path, color_info = args.color_info)
+    te_dataloader = DataLoader(te_dataset, batch_size = args.batch_size, shuffle=False, drop_last = False)
         
     if args.FT or args.FT_p:
         ft_dataset = mydata(img_path = args.ft_data_path, img_size = args.img_size,km_file_path = args.km_file_path, color_info = args.color_info)
@@ -218,6 +218,8 @@ def train(args):
             print("FT epoch losses, discriminator & generator : " + str(d_loss.item()) + '   ' + str(g_loss.item()))
             
             test_Perceptual_Loss(args, generator, te_dataloader, device)
+            
+            
             
             
             
