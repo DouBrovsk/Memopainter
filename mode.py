@@ -97,72 +97,73 @@ def train(args):
     opts = [g_opt, d_opt, m_opt,p_opt]
     
     ### Training process
-    for e in range(args.epoch):
-        print("New epoch start")
-        for i, batch in enumerate(tr_dataloader):
-            res_input = batch['res_input'].to(device)
-            color_feat = batch['color_feat'].to(device)
-            l_channel = (batch['l_channel'] / 100.0).to(device)
-            ab_channel = (batch['ab_channel'] / 110.0).to(device)
-            idx = batch['index'].to(device)
-
-            ### 1) Train spatial feature extractor
-            #res_feature = mem(res_input)
-            #loss = mem.unsupervised_loss(res_feature, color_feat, args.color_thres)
-            #zero_grad(opts)
-            #loss.backward()
-            #m_opt.step()
-            
-            ### 2) Update Memory module
-            #with torch.no_grad():
+    if args.Training_mode == 'Classic':
+        for e in range(args.epoch):
+            print("New epoch start")
+            for i, batch in enumerate(tr_dataloader):
+                res_input = batch['res_input'].to(device)
+                color_feat = batch['color_feat'].to(device)
+                l_channel = (batch['l_channel'] / 100.0).to(device)
+                ab_channel = (batch['ab_channel'] / 110.0).to(device)
+                idx = batch['index'].to(device)
+                
+                ### 1) Train spatial feature extractor
+                #res_feature = mem(res_input)
+                #loss = mem.unsupervised_loss(res_feature, color_feat, args.color_thres)
+                #zero_grad(opts)
+                #loss.backward()
+                #m_opt.step()
+                
+                ### 2) Update Memory module
+                #with torch.no_grad():
                 #res_feature = mem(res_input)
                 #mem.memory_update(res_feature, color_feat, args.color_thres, idx)
 
-            ### 3) Train Discriminator    
-            dis_color_feat = torch.cat([torch.unsqueeze(color_feat, 2) for _ in range(args.img_size)], dim = 2)
-            dis_color_feat = torch.cat([torch.unsqueeze(dis_color_feat, 3) for _ in range(args.img_size)], dim = 3)
-            fake_ab_channel = generator(l_channel, color_feat)
-            real = discriminator(ab_channel, l_channel, dis_color_feat)
-            d_loss_real = criterion_GAN(real, real_labels)
-
-            fake = discriminator(fake_ab_channel, l_channel, dis_color_feat)
-            d_loss_fake = criterion_GAN(fake, fake_labels)
-            d_loss = d_loss_real + d_loss_fake
-            
-            
-            
-            zero_grad(opts)
-            d_loss.backward()
-            d_opt.step()
-            
-            ### 4) Train Generator
-            fake_ab_channel = generator(l_channel, color_feat)
-            fake = discriminator(fake_ab_channel, l_channel, dis_color_feat)
-            g_loss_GAN = criterion_GAN(fake, real_labels)
-
-            g_loss_smoothL1 = criterion_sL1(fake_ab_channel, ab_channel)
-            g_loss = g_loss_GAN + g_loss_smoothL1
-            
-            
-
-            zero_grad(opts)
-            g_loss.backward()
-            g_opt.step()
+                ### 3) Train Discriminator    
+                dis_color_feat = torch.cat([torch.unsqueeze(color_feat, 2) for _ in range(args.img_size)], dim = 2)
+                dis_color_feat = torch.cat([torch.unsqueeze(dis_color_feat, 3) for _ in range(args.img_size)], dim = 3)
+                fake_ab_channel = generator(l_channel, color_feat)
+                real = discriminator(ab_channel, l_channel, dis_color_feat)
+                d_loss_real = criterion_GAN(real, real_labels)
+                
+                fake = discriminator(fake_ab_channel, l_channel, dis_color_feat)
+                d_loss_fake = criterion_GAN(fake, fake_labels)
+                d_loss = d_loss_real + d_loss_fake
+                
+                
+                
+                zero_grad(opts)
+                d_loss.backward()
+                d_opt.step()
+                
+                ### 4) Train Generator
+                fake_ab_channel = generator(l_channel, color_feat)
+                fake = discriminator(fake_ab_channel, l_channel, dis_color_feat)
+                g_loss_GAN = criterion_GAN(fake, real_labels)
+                
+                g_loss_smoothL1 = criterion_sL1(fake_ab_channel, ab_channel)
+                g_loss = g_loss_GAN + g_loss_smoothL1
+                
+                
+                
+                zero_grad(opts)
+                g_loss.backward()
+                g_opt.step()
          
-        print("epoch losses, discriminator & generator : " + str(d_loss.item()) + '   ' + str(g_loss.item()))    
-        f = open(train_log_path, 'a')
-        f.write('%04d-epoch train loss'%(e))
-        f.write('g_loss : %04f \t d_loss : %04f \n'%(g_loss.item(), d_loss.item()))
-        f.close()
+            print("epoch losses, discriminator & generator : " + str(d_loss.item()) + '   ' + str(g_loss.item()))    
+            f = open(train_log_path, 'a')
+            f.write('%04d-epoch train loss'%(e))
+            f.write('g_loss : %04f \t d_loss : %04f \n'%(g_loss.item(), d_loss.item()))
+            f.close()
         
-        #if args.test_with_train and (e + 1) % args.test_freq  == 0:
+            #if args.test_with_train and (e + 1) % args.test_freq  == 0:
             #generator.eval()
             #test_operation(args, generator, mem, te_dataloader, device, e)
             #generator.train()
             
-        if args.test_with_train:
+            if args.test_with_train:
         
-            test_Perceptual_Loss(args, generator, te_dataloader, device)
+                test_Perceptual_Loss(args, generator, te_dataloader, device)
         
         #torch.save(generator.state_dict(), os.path.join(model_path ,'generator_%03d.pt'%e))
             #torch.save({'mem_model' : mem.state_dict(),
@@ -171,6 +172,39 @@ def train(args):
                        #'mem_age' : mem.age.cpu(),
                        #'mem_index' : mem.top_index.cpu()}, os.path.join(model_path, 'memory_%03d.pt'%e))
                        
+    else:
+        for e in range(args.epoch):
+            print("New epoch start")
+            for i, batch in enumerate(tr_dataloader):
+                res_input = batch['res_input'].to(device)
+                color_feat = batch['color_feat'].to(device)
+                l_channel = (batch['l_channel'] / 100.0).to(device)
+                ab_channel = (batch['ab_channel'] / 110.0).to(device)
+                idx = batch['index'].to(device)
+                
+                result_ab_channel = generator(l_channel, color_feat)
+            
+            
+                real_image = torch.cat([l_channel * 100, ab_channel * 110], dim = 1)
+                fake_image = torch.cat([l_channel * 100, result_ab_channel * 110], dim = 1)
+            
+                p_loss = perceptionLoss(real_image,fake_image,pretrained_model="vgg16", device=device)
+                
+                zero_grad(opts)
+                p_loss.backward()
+                p_opt.step()
+                
+            print("epoch loss : " + str(p_loss))
+                
+                
+            if args.test_with_train:
+        
+                test_Perceptual_Loss(args, generator, te_dataloader, device)
+            
+            
+            
+        
+        
     
     if args.FT:
         for e in range(args.FT_epochs):

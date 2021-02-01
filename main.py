@@ -47,6 +47,8 @@ parser.add_argument("--FT_p", type= str2bool, default = False)
 parser.add_argument("--FT_epochs", type= int, default = 5)
 parser.add_argument("--FT_p_epochs", type= int, default = 5)
 
+parser.add_argument("--Training_mode",type=str,default = 'Classic')
+
 
 args = parser.parse_args()
 
